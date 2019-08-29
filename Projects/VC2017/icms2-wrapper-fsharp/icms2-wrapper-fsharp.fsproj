@@ -4,6 +4,7 @@
     <TargetFramework>net462</TargetFramework>
     <RootNamespace>icms_wrapper</RootNamespace>
     <Version>1.0.3</Version>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

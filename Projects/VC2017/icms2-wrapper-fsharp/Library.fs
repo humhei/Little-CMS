@@ -1,4 +1,4 @@
-﻿namespace icms_wrapper
+﻿namespace icms2_wrapper
 
 open System.Runtime.InteropServices
 open System.IO
@@ -6,7 +6,6 @@ open System
 
 #nowarn "9"
 open Microsoft.FSharp.NativeInterop
-open icms2_clr
 
 
 type Icms(iccInProfile, inputFormat: Format, iccOutProfile, outputFormat: Format, intent: Indent, dwFlags) =

@@ -8,7 +8,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace icms2_clr
+namespace icms2_wrapper
 {
     public unsafe partial class icms2_clr
     {
