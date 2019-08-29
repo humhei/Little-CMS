@@ -4030,6 +4030,8 @@ cmsInt32Number CheckFormatters16(void)
 static
 void CheckSingleFormatterFloat(cmsUInt32Number Type, const char* Text)
 {
+	printf("\n");
+	printf ("%s = %u,", Text, Type) ;
     cmsFloat32Number Values[cmsMAXCHANNELS];
     cmsUInt8Number Buffer[1024];
     cmsFormatter f, b;
