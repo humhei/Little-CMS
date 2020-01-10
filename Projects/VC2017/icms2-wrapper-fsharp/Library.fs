@@ -3,34 +3,33 @@
 open System.Runtime.InteropServices
 open System.IO
 open System
+open System.Collections.Concurrent
 
 #nowarn "9"
 open Microsoft.FSharp.NativeInterop
+
+[<AutoOpen>]
+module private Cache =
+    let profilesCache = ConcurrentDictionary<string, nativeint>()
 
 
 type Icms(iccInProfile, inputFormat: Format, iccOutProfile, outputFormat: Format, intent: Indent, dwFlags) =
     let intPtrs = ResizeArray();
 
-    let intPtrToVoidPtr intPtr =
-        let typedPtr: nativeptr<int> = NativePtr.ofNativeInt intPtr
-        NativePtr.toVoidPtr(typedPtr)
-
-    let stringToPtr (text: string) =
-        let intPtr = Marshal.StringToHGlobalAnsi(text)
-        intPtrs.Add(intPtr)
-        NativeInterop.NativePtr.ofNativeInt intPtr
-
-
 
     let createTransform(iccInProfile, inputFormat, iccOutProfile, outputFormat, intent, dwFlags) =
-        let input = icms2_clr.CmsOpenProfileFromFile(iccInProfile, "r")
-        let output = icms2_clr.CmsOpenProfileFromFile(iccOutProfile, "r")
-        try 
-            let transformPtr = icms2_clr.CmsCreateTransform(input, inputFormat, output, outputFormat, intent, dwFlags)
-            transformPtr
-        finally 
-            icms2_clr.CmsCloseProfile(input) |> ignore
-            icms2_clr.CmsCloseProfile(output) |> ignore
+        let input = 
+            profilesCache.GetOrAdd(iccInProfile, (fun iccInProfile -> 
+                icms2_clr.CmsOpenProfileFromFile(iccInProfile, "r")
+            ))
+        let output = 
+            profilesCache.GetOrAdd(iccOutProfile, (fun iccOutProfile -> 
+                icms2_clr.CmsOpenProfileFromFile(iccOutProfile, "r")
+            ))
+
+        let transformPtr = icms2_clr.CmsCreateTransform(input, inputFormat, output, outputFormat, intent, dwFlags)
+        transformPtr
+
 
 
     let transform = createTransform (iccInProfile, uint32 inputFormat, iccOutProfile,uint32 outputFormat,uint32 intent, dwFlags)
@@ -55,3 +54,13 @@ type Icms(iccInProfile, inputFormat: Format, iccOutProfile, outputFormat: Format
             for intPtr in intPtrs do
                 Marshal.FreeHGlobal(intPtr)
             icms2_clr.CmsDeleteTransform(transform)
+
+[<RequireQualifiedAccess>]
+module Icms =
+    let clearCache() =
+        for pair in profilesCache do
+
+            icms2_clr.CmsCloseProfile(pair.Value) |> ignore
+            icms2_clr.CmsCloseProfile(pair.Value) |> ignore
+
+        profilesCache.Clear()
